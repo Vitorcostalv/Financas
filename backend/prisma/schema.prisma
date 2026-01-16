@@ -19,13 +19,14 @@ model User {
   categories   Category[]
   transactions Transaction[]
   goals        Goal[]
+  plans        Plan[]
 }
 
 model Account {
   id           String        @id @default(cuid())
   name         String
   type         String
-  balance      Float         @default(0)
+  balanceCents Int           @default(0) @map("balance")
   userId       String
   user         User          @relation(fields: [userId], references: [id])
   transactions Transaction[]
@@ -39,12 +40,13 @@ model Category {
   userId       String
   user         User          @relation(fields: [userId], references: [id])
   transactions Transaction[]
+  plans        Plan[]
 }
 
 model Transaction {
   id          String           @id @default(cuid())
   description String
-  amount      Float
+  amountCents Int              @map("amount")
   date        DateTime
   type        String
   categoryId  String
@@ -58,9 +60,21 @@ model Transaction {
 model Goal {
   id      String  @id @default(cuid())
   name    String
-  limit   Float
-  current Float   @default(0)
+  limitCents   Int  @map("limit")
+  currentCents Int  @default(0) @map("current")
   month   Int
   userId  String
   user    User    @relation(fields: [userId], references: [id])
+}
+
+model Plan {
+  id          String   @id @default(cuid())
+  name        String
+  amountCents Int
+  dueDate     DateTime
+  categoryId  String?
+  userId      String
+  createdAt   DateTime @default(now())
+  category    Category? @relation(fields: [categoryId], references: [id])
+  user        User     @relation(fields: [userId], references: [id])
 }

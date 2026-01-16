@@ -18,20 +18,20 @@ export function authMiddleware(
     const authHeader = req.headers.authorization;
 
     if (!authHeader) {
-      throw new AppError("Token not provided", 401);
+      throw new AppError("Token nao informado", 401);
     }
 
     const [scheme, token] = authHeader.split(" ");
 
     if (scheme?.toLowerCase() !== "bearer" || !token) {
-      throw new AppError("Invalid token", 401);
+      throw new AppError("Token invalido", 401);
     }
 
     const payload = jwt.verify(token, jwtConfig.secret) as TokenPayload;
     const userId = payload.sub ?? payload.userId ?? payload.id;
 
     if (!userId) {
-      throw new AppError("Invalid token", 401);
+      throw new AppError("Token invalido", 401);
     }
 
     req.user = { id: userId };
