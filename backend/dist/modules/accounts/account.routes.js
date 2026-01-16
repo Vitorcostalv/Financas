@@ -10,3 +10,7 @@ const accountRoutes = (0, express_1.Router)();
 exports.accountRoutes = accountRoutes;
 accountRoutes.post("/", (0, validate_1.validate)(account_schema_1.createAccountSchema), (0, asyncHandler_1.asyncHandler)(account_controller_1.AccountController.create));
 accountRoutes.get("/", (0, asyncHandler_1.asyncHandler)(account_controller_1.AccountController.list));
+accountRoutes.get("/:id/schedules", (0, validate_1.validate)(account_schema_1.scheduleParamsSchema), (0, asyncHandler_1.asyncHandler)(account_controller_1.AccountController.listSchedules));
+accountRoutes.post("/:id/schedules", (0, validate_1.validate)(account_schema_1.createScheduleSchema), (0, asyncHandler_1.asyncHandler)(account_controller_1.AccountController.createSchedule));
+accountRoutes.put("/:id/schedules/:scheduleId", (0, validate_1.validate)(account_schema_1.updateScheduleSchema), (0, asyncHandler_1.asyncHandler)(account_controller_1.AccountController.updateSchedule));
+accountRoutes.delete("/:id/schedules/:scheduleId", (0, validate_1.validate)(account_schema_1.deleteScheduleSchema), (0, asyncHandler_1.asyncHandler)(account_controller_1.AccountController.deleteSchedule));

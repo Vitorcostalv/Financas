@@ -1,0 +1,13 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.configuracoesRoutes = void 0;
+const express_1 = require("express");
+const asyncHandler_1 = require("../../utils/asyncHandler");
+const validate_1 = require("../../middlewares/validate");
+const configuracoes_controller_1 = require("./configuracoes.controller");
+const configuracoes_schema_1 = require("./configuracoes.schema");
+const configuracoesRoutes = (0, express_1.Router)();
+exports.configuracoesRoutes = configuracoesRoutes;
+configuracoesRoutes.get("/perfil", (0, asyncHandler_1.asyncHandler)(configuracoes_controller_1.ConfiguracoesController.getProfile));
+configuracoesRoutes.put("/perfil", (0, validate_1.validate)(configuracoes_schema_1.updateProfileSchema), (0, asyncHandler_1.asyncHandler)(configuracoes_controller_1.ConfiguracoesController.updateProfile));
+configuracoesRoutes.put("/senha", (0, validate_1.validate)(configuracoes_schema_1.updatePasswordSchema), (0, asyncHandler_1.asyncHandler)(configuracoes_controller_1.ConfiguracoesController.updatePassword));

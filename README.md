@@ -67,18 +67,42 @@ curl -X POST http://localhost:3333/planos \
     ]
   }'
 
-# Criar recorrencia (configuracoes)
-curl -X POST http://localhost:3333/configuracoes/recorrencias \
+# Atualizar perfil
+curl -X PUT http://localhost:3333/configuracoes/perfil \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer SEU_TOKEN" \
+  -d '{"name":"Novo Nome","email":"novo@email.com"}'
+
+# Atualizar senha
+curl -X PUT http://localhost:3333/configuracoes/senha \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer SEU_TOKEN" \
+  -d '{"currentPassword":"123456","newPassword":"12345678"}'
+
+# Criar conta variavel com vigencias
+curl -X POST http://localhost:3333/contas \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer SEU_TOKEN" \
   -d '{
     "name":"Salario",
-    "type":"INCOME",
-    "amountCents":500000,
-    "frequency":"MONTHLY",
+    "type":"WALLET",
+    "valueMode":"VARIABLE",
     "startDate":"2026-01-01",
-    "isFixed":true
+    "schedules":[
+      {
+        "type":"INCOME",
+        "amountCents":500000,
+        "frequency":"MONTHLY",
+        "startDate":"2026-01-01"
+      }
+    ]
   }'
+
+# Criar vigencia para conta
+curl -X POST http://localhost:3333/contas/ID_CONTA/schedules \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer SEU_TOKEN" \
+  -d '{"type":"EXPENSE","amountCents":30000,"frequency":"MONTHLY","startDate":"2026-01-05"}'
 
 # Serie mensal do dashboard
 curl "http://localhost:3333/dashboard/serie-mensal?startMonth=1&startYear=2026&months=6" \

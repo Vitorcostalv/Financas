@@ -1,6 +1,6 @@
 import { prisma } from "../../utils/prisma";
 import { normalizeAccountType } from "../../shared/utils/account";
-import { RecorrenciaService } from "../configuracoes/recorrencia.service";
+import { AccountScheduleService } from "../accounts/accountSchedule.service";
 
 export class DashboardService {
   static async summary(userId: string, month: number, year: number) {
@@ -20,7 +20,7 @@ export class DashboardService {
         where: { userId },
         orderBy: { name: "asc" }
       }),
-      RecorrenciaService.getOccurrencesForMonth(userId, month, year)
+      AccountScheduleService.getOccurrencesForMonth(userId, month, year)
     ]);
 
     let carteiraCents = 0;
@@ -94,7 +94,7 @@ export class DashboardService {
         where: { userId },
         select: { type: true, balanceCents: true }
       }),
-      RecorrenciaService.listRulesForRange(userId, startDate, endDate)
+      AccountScheduleService.listSchedulesForRange(userId, startDate, endDate)
     ]);
 
     let carteiraCents = 0;
@@ -158,7 +158,7 @@ export class DashboardService {
       const receitasCents = transactionMap.get(key)?.incomeCents ?? 0;
       const despesasCents = transactionMap.get(key)?.expenseCents ?? 0;
 
-      const ocorrencias = RecorrenciaService.buildOccurrencesForMonth(
+      const ocorrencias = AccountScheduleService.buildOccurrencesForMonth(
         regras,
         month,
         year

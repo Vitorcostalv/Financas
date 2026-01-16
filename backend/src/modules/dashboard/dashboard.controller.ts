@@ -33,12 +33,21 @@ export class DashboardController {
       req.query as { month?: string; year?: string }
     );
 
-    const summary = await DashboardService.summary(
-      userId,
-      resolvedMonth,
-      resolvedYear
-    );
-    return sendResponse(res, 200, "Resumo do dashboard", summary);
+    try {
+      const summary = await DashboardService.summary(
+        userId,
+        resolvedMonth,
+        resolvedYear
+      );
+      return sendResponse(res, 200, "Resumo carregado com sucesso.", summary);
+    } catch (error) {
+      if (error instanceof AppError) {
+        throw error;
+      }
+
+      console.error("Erro ao carregar resumo do dashboard:", error);
+      throw new AppError("Erro ao carregar resumo.", 500);
+    }
   }
 
   static async expensesByCategory(req: Request, res: Response) {
@@ -92,14 +101,23 @@ export class DashboardController {
       months: number;
     };
 
-    const data = await DashboardService.serieMensal(
-      userId,
-      startMonth,
-      startYear,
-      months
-    );
+    try {
+      const data = await DashboardService.serieMensal(
+        userId,
+        startMonth,
+        startYear,
+        months
+      );
 
-    return sendResponse(res, 200, "Serie mensal gerada", data);
+      return sendResponse(res, 200, "Serie mensal carregada com sucesso.", data);
+    } catch (error) {
+      if (error instanceof AppError) {
+        throw error;
+      }
+
+      console.error("Erro ao carregar serie mensal:", error);
+      throw new AppError("Erro ao carregar serie mensal.", 500);
+    }
   }
 }
 

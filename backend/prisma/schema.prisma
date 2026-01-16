@@ -21,7 +21,6 @@ model User {
   transactions Transaction[]
   goals        Goal[]
   plans        Plan[]
-  recurringRules RecurringRule[]
 }
 
 model Account {
@@ -31,9 +30,14 @@ model Account {
   balanceCents Int           @default(0) @map("balance")
   creditLimitCents Int?
   creditUsedCents  Int       @default(0)
+  valueMode    String        @default("FIXED")
+  startDate    DateTime?
+  endDate      DateTime?
+  isActive     Boolean       @default(true)
   userId       String
   user         User          @relation(fields: [userId], references: [id])
   transactions Transaction[]
+  schedules    AccountSchedule[]
 }
 
 model Category {
@@ -44,7 +48,6 @@ model Category {
   userId       String
   user         User          @relation(fields: [userId], references: [id])
   transactions Transaction[]
-  recurringRules RecurringRule[]
 }
 
 model Transaction {
@@ -110,20 +113,14 @@ model Installment {
   planItem         PlanItem @relation(fields: [planItemId], references: [id])
 }
 
-model RecurringRule {
-  id               String   @id @default(cuid())
-  name             String
-  description      String?
-  type             String
-  amountCents      Int
-  frequency        String
-  startDate        DateTime
-  endDate          DateTime?
-  isFixed          Boolean
-  accountTypeTarget String?
-  categoryId       String?
-  userId           String
-  createdAt        DateTime @default(now())
-  category         Category? @relation(fields: [categoryId], references: [id])
-  user             User     @relation(fields: [userId], references: [id])
+model AccountSchedule {
+  id         String   @id @default(cuid())
+  accountId  String
+  type       String
+  amountCents Int
+  frequency  String
+  startDate  DateTime
+  endDate    DateTime?
+  createdAt  DateTime @default(now())
+  account    Account  @relation(fields: [accountId], references: [id])
 }

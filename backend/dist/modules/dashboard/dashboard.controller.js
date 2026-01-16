@@ -24,8 +24,17 @@ class DashboardController {
             throw new errors_1.AppError("Nao autorizado", 401);
         }
         const { resolvedMonth, resolvedYear } = resolveMonthYear(req.query);
-        const summary = await dashboard_service_1.DashboardService.summary(userId, resolvedMonth, resolvedYear);
-        return (0, response_1.sendResponse)(res, 200, "Resumo do dashboard", summary);
+        try {
+            const summary = await dashboard_service_1.DashboardService.summary(userId, resolvedMonth, resolvedYear);
+            return (0, response_1.sendResponse)(res, 200, "Resumo carregado com sucesso.", summary);
+        }
+        catch (error) {
+            if (error instanceof errors_1.AppError) {
+                throw error;
+            }
+            console.error("Erro ao carregar resumo do dashboard:", error);
+            throw new errors_1.AppError("Erro ao carregar resumo.", 500);
+        }
     }
     static async expensesByCategory(req, res) {
         const userId = req.userId ?? req.user?.id;
@@ -51,8 +60,17 @@ class DashboardController {
             throw new errors_1.AppError("Nao autorizado", 401);
         }
         const { startMonth, startYear, months } = req.query;
-        const data = await dashboard_service_1.DashboardService.serieMensal(userId, startMonth, startYear, months);
-        return (0, response_1.sendResponse)(res, 200, "Serie mensal gerada", data);
+        try {
+            const data = await dashboard_service_1.DashboardService.serieMensal(userId, startMonth, startYear, months);
+            return (0, response_1.sendResponse)(res, 200, "Serie mensal carregada com sucesso.", data);
+        }
+        catch (error) {
+            if (error instanceof errors_1.AppError) {
+                throw error;
+            }
+            console.error("Erro ao carregar serie mensal:", error);
+            throw new errors_1.AppError("Erro ao carregar serie mensal.", 500);
+        }
     }
 }
 exports.DashboardController = DashboardController;

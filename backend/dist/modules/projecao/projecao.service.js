@@ -4,7 +4,7 @@ exports.ProjecaoService = void 0;
 const client_1 = require("@prisma/client");
 const prisma_1 = require("../../utils/prisma");
 const account_1 = require("../../shared/utils/account");
-const recorrencia_service_1 = require("../configuracoes/recorrencia.service");
+const accountSchedule_service_1 = require("../accounts/accountSchedule.service");
 class ProjecaoService {
     static async mensal(userId, startMonth, startYear, months) {
         const startDate = new Date(startYear, startMonth - 1, 1);
@@ -28,7 +28,7 @@ class ProjecaoService {
                 where: { userId },
                 select: { type: true, balanceCents: true }
             }),
-            recorrencia_service_1.RecorrenciaService.listRulesForRange(userId, startDate, endDate)
+            accountSchedule_service_1.AccountScheduleService.listSchedulesForRange(userId, startDate, endDate)
         ]);
         let oneTimeItems = [];
         let installments = [];
@@ -125,7 +125,7 @@ class ProjecaoService {
             const receitasCents = transactionMap.get(key)?.incomeCents ?? 0;
             const despesasCents = transactionMap.get(key)?.expenseCents ?? 0;
             const planejadoCents = planMap.get(key) ?? 0;
-            const ocorrencias = recorrencia_service_1.RecorrenciaService.buildOccurrencesForMonth(regras, month, year);
+            const ocorrencias = accountSchedule_service_1.AccountScheduleService.buildOccurrencesForMonth(regras, month, year);
             const receitasPrevistasCents = ocorrencias
                 .filter((item) => item.type === "INCOME")
                 .reduce((total, item) => total + item.amountCents, 0);

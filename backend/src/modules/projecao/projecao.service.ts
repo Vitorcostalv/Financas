@@ -1,7 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "../../utils/prisma";
 import { normalizeAccountType } from "../../shared/utils/account";
-import { RecorrenciaService } from "../configuracoes/recorrencia.service";
+import { AccountScheduleService } from "../accounts/accountSchedule.service";
 
 type ProjectionItem = {
   month: number;
@@ -44,7 +44,7 @@ export class ProjecaoService {
         where: { userId },
         select: { type: true, balanceCents: true }
       }),
-      RecorrenciaService.listRulesForRange(userId, startDate, endDate)
+      AccountScheduleService.listSchedulesForRange(userId, startDate, endDate)
     ]);
 
     let oneTimeItems: { dueDate: Date; amountCents: number }[] = [];
@@ -167,7 +167,7 @@ export class ProjecaoService {
       const receitasCents = transactionMap.get(key)?.incomeCents ?? 0;
       const despesasCents = transactionMap.get(key)?.expenseCents ?? 0;
       const planejadoCents = planMap.get(key) ?? 0;
-      const ocorrencias = RecorrenciaService.buildOccurrencesForMonth(
+      const ocorrencias = AccountScheduleService.buildOccurrencesForMonth(
         regras,
         month,
         year

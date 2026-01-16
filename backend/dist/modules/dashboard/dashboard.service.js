@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.DashboardService = void 0;
 const prisma_1 = require("../../utils/prisma");
 const account_1 = require("../../shared/utils/account");
-const recorrencia_service_1 = require("../configuracoes/recorrencia.service");
+const accountSchedule_service_1 = require("../accounts/accountSchedule.service");
 class DashboardService {
     static async summary(userId, month, year) {
         const startDate = new Date(year, month - 1, 1);
@@ -21,7 +21,7 @@ class DashboardService {
                 where: { userId },
                 orderBy: { name: "asc" }
             }),
-            recorrencia_service_1.RecorrenciaService.getOccurrencesForMonth(userId, month, year)
+            accountSchedule_service_1.AccountScheduleService.getOccurrencesForMonth(userId, month, year)
         ]);
         let carteiraCents = 0;
         let extraCents = 0;
@@ -84,7 +84,7 @@ class DashboardService {
                 where: { userId },
                 select: { type: true, balanceCents: true }
             }),
-            recorrencia_service_1.RecorrenciaService.listRulesForRange(userId, startDate, endDate)
+            accountSchedule_service_1.AccountScheduleService.listSchedulesForRange(userId, startDate, endDate)
         ]);
         let carteiraCents = 0;
         let extraCents = 0;
@@ -125,7 +125,7 @@ class DashboardService {
             const key = `${year}-${month}`;
             const receitasCents = transactionMap.get(key)?.incomeCents ?? 0;
             const despesasCents = transactionMap.get(key)?.expenseCents ?? 0;
-            const ocorrencias = recorrencia_service_1.RecorrenciaService.buildOccurrencesForMonth(regras, month, year);
+            const ocorrencias = accountSchedule_service_1.AccountScheduleService.buildOccurrencesForMonth(regras, month, year);
             const receitasPrevistasCents = ocorrencias
                 .filter((item) => item.type === "INCOME")
                 .reduce((total, item) => total + item.amountCents, 0);
