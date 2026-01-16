@@ -5,7 +5,8 @@
   "main": "dist/server.js",
   "scripts": {
     "build": "tsc",
-    "start": "node dist/server.js"
+    "start": "node dist/server.js",
+    "migrate:deploy": "npx prisma migrate deploy"
   },
   "engines": {
     "node": "20.x"

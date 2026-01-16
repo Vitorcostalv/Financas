@@ -5,7 +5,7 @@ dotenv.config();
 
 const envSchema = z.object({
   PORT: z.coerce.number().default(3333),
-  DATABASE_URL: z.string().default("file:./dev.db"),
+  DATABASE_URL: z.string().default("file:./prisma/dev.db"),
   JWT_SECRET: z.string().default("dev-secret-change-me"),
   JWT_EXPIRES_IN: z.string().default("7d")
 });
