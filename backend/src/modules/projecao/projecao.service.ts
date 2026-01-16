@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "../../utils/prisma";
 import { normalizeAccountType } from "../../shared/utils/account";
+import { RecorrenciaService } from "../configuracoes/recorrencia.service";
 
 type ProjectionItem = {
   month: number;
@@ -8,6 +9,8 @@ type ProjectionItem = {
   receitasCents: number;
   despesasCents: number;
   planejadoCents: number;
+  receitasPrevistasCents: number;
+  despesasPrevistasCents: number;
   resultadoCents: number;
   saldoProjetadoCents: number;
 };
@@ -22,7 +25,7 @@ export class ProjecaoService {
     const startDate = new Date(startYear, startMonth - 1, 1);
     const endDate = new Date(startYear, startMonth - 1 + months, 1);
 
-    const [transactions, accounts] = await Promise.all([
+    const [transactions, accounts, regras] = await Promise.all([
       prisma.transaction.findMany({
         where: {
           userId,
@@ -40,7 +43,8 @@ export class ProjecaoService {
       prisma.account.findMany({
         where: { userId },
         select: { type: true, balanceCents: true }
-      })
+      }),
+      RecorrenciaService.listRulesForRange(userId, startDate, endDate)
     ]);
 
     let oneTimeItems: { dueDate: Date; amountCents: number }[] = [];
@@ -101,23 +105,25 @@ export class ProjecaoService {
       { incomeCents: number; expenseCents: number }
     >();
 
-    transactions.forEach((transaction) => {
-      const key = `${transaction.date.getFullYear()}-${
-        transaction.date.getMonth() + 1
-      }`;
-      const current = transactionMap.get(key) ?? {
-        incomeCents: 0,
-        expenseCents: 0
-      };
+    transactions.forEach(
+      (transaction: { date: Date; amountCents: number; type: string }) => {
+        const key = `${transaction.date.getFullYear()}-${
+          transaction.date.getMonth() + 1
+        }`;
+        const current = transactionMap.get(key) ?? {
+          incomeCents: 0,
+          expenseCents: 0
+        };
 
-      if (transaction.type === "INCOME") {
-        current.incomeCents += transaction.amountCents;
-      } else {
-        current.expenseCents += transaction.amountCents;
+        if (transaction.type === "INCOME") {
+          current.incomeCents += transaction.amountCents;
+        } else {
+          current.expenseCents += transaction.amountCents;
+        }
+
+        transactionMap.set(key, current);
       }
-
-      transactionMap.set(key, current);
-    });
+    );
 
     const planMap = new Map<string, number>();
 
@@ -137,7 +143,7 @@ export class ProjecaoService {
     let extraCents = 0;
     let despesasCents = 0;
 
-    accounts.forEach((account) => {
+    accounts.forEach((account: { type: string; balanceCents: number }) => {
       const type = normalizeAccountType(account.type);
 
       if (type === "WALLET") {
@@ -161,7 +167,24 @@ export class ProjecaoService {
       const receitasCents = transactionMap.get(key)?.incomeCents ?? 0;
       const despesasCents = transactionMap.get(key)?.expenseCents ?? 0;
       const planejadoCents = planMap.get(key) ?? 0;
-      const resultadoCents = receitasCents - despesasCents - planejadoCents;
+      const ocorrencias = RecorrenciaService.buildOccurrencesForMonth(
+        regras,
+        month,
+        year
+      );
+      const receitasPrevistasCents = ocorrencias
+        .filter((item) => item.type === "INCOME")
+        .reduce((total, item) => total + item.amountCents, 0);
+      const despesasPrevistasCents = ocorrencias
+        .filter((item) => item.type === "EXPENSE")
+        .reduce((total, item) => total + item.amountCents, 0);
+
+      const resultadoCents =
+        receitasCents -
+        despesasCents -
+        planejadoCents +
+        receitasPrevistasCents -
+        despesasPrevistasCents;
 
       saldoProjetadoCents += resultadoCents;
 
@@ -171,6 +194,8 @@ export class ProjecaoService {
         receitasCents,
         despesasCents,
         planejadoCents,
+        receitasPrevistasCents,
+        despesasPrevistasCents,
         resultadoCents,
         saldoProjetadoCents
       });

@@ -3,6 +3,7 @@ import { PlanService } from "./plan.service";
 import { AppError } from "../../utils/errors";
 import { sendResponse } from "../../utils/response";
 import { parseBRLToCents } from "../../shared/utils/money";
+import { ProjecaoService } from "../projecao/projecao.service";
 
 export class PlanController {
   static async create(req: Request, res: Response) {
@@ -149,5 +150,28 @@ export class PlanController {
 
     const plan = await PlanService.getById(userId, req.params.id);
     return sendResponse(res, 200, "Plano obtido", plan);
+  }
+
+  static async projectionMonthly(req: Request, res: Response) {
+    const userId = req.userId ?? req.user?.id;
+
+    if (!userId) {
+      throw new AppError("Nao autorizado", 401);
+    }
+
+    const { startMonth, startYear, months } = req.query as unknown as {
+      startMonth: number;
+      startYear: number;
+      months: number;
+    };
+
+    const data = await ProjecaoService.mensal(
+      userId,
+      startMonth,
+      startYear,
+      months
+    );
+
+    return sendResponse(res, 200, "Projecao gerada com sucesso.", data);
   }
 }

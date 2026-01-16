@@ -24,6 +24,11 @@ export class ProjecaoController {
       months
     );
 
-    return sendResponse(res, 200, "Projecao gerada com sucesso.", data);
+    return sendResponse(
+      res,
+      200,
+      "Projecao gerada com sucesso. Endpoint depreciado, use /planos/projecao-mensal.",
+      data
+    );
   }
 }

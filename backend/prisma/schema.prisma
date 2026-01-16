@@ -21,6 +21,7 @@ model User {
   transactions Transaction[]
   goals        Goal[]
   plans        Plan[]
+  recurringRules RecurringRule[]
 }
 
 model Account {
@@ -43,6 +44,7 @@ model Category {
   userId       String
   user         User          @relation(fields: [userId], references: [id])
   transactions Transaction[]
+  recurringRules RecurringRule[]
 }
 
 model Transaction {
@@ -106,4 +108,22 @@ model Installment {
   amountCents      Int
   status           String
   planItem         PlanItem @relation(fields: [planItemId], references: [id])
+}
+
+model RecurringRule {
+  id               String   @id @default(cuid())
+  name             String
+  description      String?
+  type             String
+  amountCents      Int
+  frequency        String
+  startDate        DateTime
+  endDate          DateTime?
+  isFixed          Boolean
+  accountTypeTarget String?
+  categoryId       String?
+  userId           String
+  createdAt        DateTime @default(now())
+  category         Category? @relation(fields: [categoryId], references: [id])
+  user             User     @relation(fields: [userId], references: [id])
 }

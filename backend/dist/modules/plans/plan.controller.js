@@ -5,6 +5,7 @@ const plan_service_1 = require("./plan.service");
 const errors_1 = require("../../utils/errors");
 const response_1 = require("../../utils/response");
 const money_1 = require("../../shared/utils/money");
+const projecao_service_1 = require("../projecao/projecao.service");
 class PlanController {
     static async create(req, res) {
         const userId = req.userId ?? req.user?.id;
@@ -104,6 +105,15 @@ class PlanController {
         }
         const plan = await plan_service_1.PlanService.getById(userId, req.params.id);
         return (0, response_1.sendResponse)(res, 200, "Plano obtido", plan);
+    }
+    static async projectionMonthly(req, res) {
+        const userId = req.userId ?? req.user?.id;
+        if (!userId) {
+            throw new errors_1.AppError("Nao autorizado", 401);
+        }
+        const { startMonth, startYear, months } = req.query;
+        const data = await projecao_service_1.ProjecaoService.mensal(userId, startMonth, startYear, months);
+        return (0, response_1.sendResponse)(res, 200, "Projecao gerada com sucesso.", data);
     }
 }
 exports.PlanController = PlanController;

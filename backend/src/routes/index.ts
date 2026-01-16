@@ -7,6 +7,7 @@ import { dashboardRoutes } from "../modules/dashboard/dashboard.routes";
 import { goalRoutes } from "../modules/goals/goal.routes";
 import { planRoutes } from "../modules/plans/plan.routes";
 import { projecaoRoutes } from "../modules/projecao/projecao.routes";
+import { recorrenciaRoutes } from "../modules/configuracoes/recorrencia.routes";
 import { authMiddleware } from "../middlewares/auth";
 
 const routes = Router();
@@ -26,6 +27,7 @@ routes.use("/plans", authMiddleware, planRoutes);
 routes.use("/planos", authMiddleware, planRoutes);
 
 routes.use("/projecao", authMiddleware, projecaoRoutes);
+routes.use("/configuracoes", authMiddleware, recorrenciaRoutes);
 
 routes.use("/dashboard", authMiddleware, dashboardRoutes);
 routes.use("/goals", authMiddleware, goalRoutes);

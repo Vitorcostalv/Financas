@@ -7,6 +7,7 @@ import {
   updatePlanSchema
 } from "./plan.schema";
 import { asyncHandler } from "../../utils/asyncHandler";
+import { monthlyProjectionSchema } from "../projecao/projecao.schema";
 
 const planRoutes = Router();
 
@@ -17,6 +18,12 @@ planRoutes.post(
 );
 
 planRoutes.get("/", asyncHandler(PlanController.list));
+
+planRoutes.get(
+  "/projecao-mensal",
+  validate(monthlyProjectionSchema),
+  asyncHandler(PlanController.projectionMonthly)
+);
 
 planRoutes.get("/:id", asyncHandler(PlanController.getById));
 

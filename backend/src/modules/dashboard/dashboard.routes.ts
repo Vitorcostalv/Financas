@@ -1,6 +1,8 @@
 import { Router } from "express";
 import { DashboardController } from "./dashboard.controller";
 import { asyncHandler } from "../../utils/asyncHandler";
+import { validate } from "../../middlewares/validate";
+import { dashboardSerieSchema } from "./dashboard.schema";
 
 const dashboardRoutes = Router();
 
@@ -12,6 +14,12 @@ dashboardRoutes.get(
 dashboardRoutes.get(
   "/resumo",
   asyncHandler(DashboardController.summary)
+);
+
+dashboardRoutes.get(
+  "/serie-mensal",
+  validate(dashboardSerieSchema),
+  asyncHandler(DashboardController.serieMensal)
 );
 
 dashboardRoutes.get(

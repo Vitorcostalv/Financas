@@ -4,11 +4,12 @@ exports.ProjecaoService = void 0;
 const client_1 = require("@prisma/client");
 const prisma_1 = require("../../utils/prisma");
 const account_1 = require("../../shared/utils/account");
+const recorrencia_service_1 = require("../configuracoes/recorrencia.service");
 class ProjecaoService {
     static async mensal(userId, startMonth, startYear, months) {
         const startDate = new Date(startYear, startMonth - 1, 1);
         const endDate = new Date(startYear, startMonth - 1 + months, 1);
-        const [transactions, accounts] = await Promise.all([
+        const [transactions, accounts, regras] = await Promise.all([
             prisma_1.prisma.transaction.findMany({
                 where: {
                     userId,
@@ -26,7 +27,8 @@ class ProjecaoService {
             prisma_1.prisma.account.findMany({
                 where: { userId },
                 select: { type: true, balanceCents: true }
-            })
+            }),
+            recorrencia_service_1.RecorrenciaService.listRulesForRange(userId, startDate, endDate)
         ]);
         let oneTimeItems = [];
         let installments = [];
@@ -123,7 +125,18 @@ class ProjecaoService {
             const receitasCents = transactionMap.get(key)?.incomeCents ?? 0;
             const despesasCents = transactionMap.get(key)?.expenseCents ?? 0;
             const planejadoCents = planMap.get(key) ?? 0;
-            const resultadoCents = receitasCents - despesasCents - planejadoCents;
+            const ocorrencias = recorrencia_service_1.RecorrenciaService.buildOccurrencesForMonth(regras, month, year);
+            const receitasPrevistasCents = ocorrencias
+                .filter((item) => item.type === "INCOME")
+                .reduce((total, item) => total + item.amountCents, 0);
+            const despesasPrevistasCents = ocorrencias
+                .filter((item) => item.type === "EXPENSE")
+                .reduce((total, item) => total + item.amountCents, 0);
+            const resultadoCents = receitasCents -
+                despesasCents -
+                planejadoCents +
+                receitasPrevistasCents -
+                despesasPrevistasCents;
             saldoProjetadoCents += resultadoCents;
             items.push({
                 month,
@@ -131,6 +144,8 @@ class ProjecaoService {
                 receitasCents,
                 despesasCents,
                 planejadoCents,
+                receitasPrevistasCents,
+                despesasPrevistasCents,
                 resultadoCents,
                 saldoProjetadoCents
             });

@@ -21,8 +21,12 @@ curl -X POST http://localhost:3333/categorias \
   -H "Authorization: Bearer SEU_TOKEN" \
   -d '{"name":"Salario","type":"Receita","color":"#00FF00"}'
 
-# Projecao mensal
+# Projecao mensal (endpoint depreciado, use /planos/projecao-mensal)
 curl "http://localhost:3333/projecao/mensal?startMonth=1&startYear=2026&months=6" \
+  -H "Authorization: Bearer SEU_TOKEN"
+
+# Projecao mensal via planejamento (oficial)
+curl "http://localhost:3333/planos/projecao-mensal?startMonth=1&startYear=2026&months=6" \
   -H "Authorization: Bearer SEU_TOKEN"
 
 # Criar conta (WALLET, EXTRA_POOL, EXPENSE_POOL, CREDIT_CARD)
@@ -62,4 +66,21 @@ curl -X POST http://localhost:3333/planos \
       }
     ]
   }'
+
+# Criar recorrencia (configuracoes)
+curl -X POST http://localhost:3333/configuracoes/recorrencias \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer SEU_TOKEN" \
+  -d '{
+    "name":"Salario",
+    "type":"INCOME",
+    "amountCents":500000,
+    "frequency":"MONTHLY",
+    "startDate":"2026-01-01",
+    "isFixed":true
+  }'
+
+# Serie mensal do dashboard
+curl "http://localhost:3333/dashboard/serie-mensal?startMonth=1&startYear=2026&months=6" \
+  -H "Authorization: Bearer SEU_TOKEN"
 ```

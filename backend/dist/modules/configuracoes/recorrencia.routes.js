@@ -1,0 +1,14 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.recorrenciaRoutes = void 0;
+const express_1 = require("express");
+const validate_1 = require("../../middlewares/validate");
+const asyncHandler_1 = require("../../utils/asyncHandler");
+const recorrencia_schema_1 = require("./recorrencia.schema");
+const recorrencia_controller_1 = require("./recorrencia.controller");
+const recorrenciaRoutes = (0, express_1.Router)();
+exports.recorrenciaRoutes = recorrenciaRoutes;
+recorrenciaRoutes.get("/recorrencias", (0, asyncHandler_1.asyncHandler)(recorrencia_controller_1.RecorrenciaController.list));
+recorrenciaRoutes.post("/recorrencias", (0, validate_1.validate)(recorrencia_schema_1.createRecurringSchema), (0, asyncHandler_1.asyncHandler)(recorrencia_controller_1.RecorrenciaController.create));
+recorrenciaRoutes.put("/recorrencias/:id", (0, validate_1.validate)(recorrencia_schema_1.updateRecurringSchema), (0, asyncHandler_1.asyncHandler)(recorrencia_controller_1.RecorrenciaController.update));
+recorrenciaRoutes.delete("/recorrencias/:id", (0, validate_1.validate)(recorrencia_schema_1.deleteRecurringSchema), (0, asyncHandler_1.asyncHandler)(recorrencia_controller_1.RecorrenciaController.delete));

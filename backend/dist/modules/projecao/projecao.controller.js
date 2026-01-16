@@ -12,7 +12,7 @@ class ProjecaoController {
         }
         const { startMonth, startYear, months } = req.query;
         const data = await projecao_service_1.ProjecaoService.mensal(userId, startMonth, startYear, months);
-        return (0, response_1.sendResponse)(res, 200, "Projecao gerada com sucesso.", data);
+        return (0, response_1.sendResponse)(res, 200, "Projecao gerada com sucesso. Endpoint depreciado, use /planos/projecao-mensal.", data);
     }
 }
 exports.ProjecaoController = ProjecaoController;
