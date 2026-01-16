@@ -4,12 +4,11 @@
   "description": "Backend for Finance app",
   "main": "dist/server.js",
   "scripts": {
-    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "build": "tsc",
-    "start": "node dist/server.js",
-    "postinstall": "npx prisma generate",
-    "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev --name init"
+    "start": "node dist/server.js"
+  },
+  "engines": {
+    "node": "20.x"
   },
   "dependencies": {
     "@prisma/client": "^5.17.0",
