@@ -9,6 +9,7 @@ const transaction_routes_1 = require("../modules/transactions/transaction.routes
 const dashboard_routes_1 = require("../modules/dashboard/dashboard.routes");
 const goal_routes_1 = require("../modules/goals/goal.routes");
 const plan_routes_1 = require("../modules/plans/plan.routes");
+const projecao_routes_1 = require("../modules/projecao/projecao.routes");
 const auth_1 = require("../middlewares/auth");
 const routes = (0, express_1.Router)();
 exports.routes = routes;
@@ -21,5 +22,6 @@ routes.use("/transactions", auth_1.authMiddleware, transaction_routes_1.transact
 routes.use("/transacoes", auth_1.authMiddleware, transaction_routes_1.transactionRoutes);
 routes.use("/plans", auth_1.authMiddleware, plan_routes_1.planRoutes);
 routes.use("/planos", auth_1.authMiddleware, plan_routes_1.planRoutes);
+routes.use("/projecao", auth_1.authMiddleware, projecao_routes_1.projecaoRoutes);
 routes.use("/dashboard", auth_1.authMiddleware, dashboard_routes_1.dashboardRoutes);
 routes.use("/goals", auth_1.authMiddleware, goal_routes_1.goalRoutes);

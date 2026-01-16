@@ -5,7 +5,7 @@ import { sendResponse } from "../../utils/response";
 
 export class CategoryController {
   static async create(req: Request, res: Response) {
-    const userId = req.user?.id;
+    const userId = req.userId ?? req.user?.id;
 
     if (!userId) {
       throw new AppError("Nao autorizado", 401);
@@ -16,7 +16,7 @@ export class CategoryController {
   }
 
   static async list(req: Request, res: Response) {
-    const userId = req.user?.id;
+    const userId = req.userId ?? req.user?.id;
 
     if (!userId) {
       throw new AppError("Nao autorizado", 401);
@@ -27,7 +27,7 @@ export class CategoryController {
   }
 
   static async update(req: Request, res: Response) {
-    const userId = req.user?.id;
+    const userId = req.userId ?? req.user?.id;
 
     if (!userId) {
       throw new AppError("Nao autorizado", 401);
@@ -38,7 +38,7 @@ export class CategoryController {
   }
 
   static async delete(req: Request, res: Response) {
-    const userId = req.user?.id;
+    const userId = req.userId ?? req.user?.id;
 
     if (!userId) {
       throw new AppError("Nao autorizado", 401);

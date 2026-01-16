@@ -7,6 +7,6 @@ app.listen(env.PORT, () => {
   console.log(`Banco: ${dbPath}`);
   console.log(`Finance API running on port ${env.PORT}`);
   console.log(
-    "Rotas registradas: /auth, /contas, /categorias, /transacoes, /planos, /dashboard"
+    "Rotas registradas: /auth, /contas, /categorias, /transacoes, /planos, /projecao, /dashboard"
   );
 });

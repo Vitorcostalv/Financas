@@ -2,7 +2,25 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteCategorySchema = exports.updateCategorySchema = exports.createCategorySchema = void 0;
 const zod_1 = require("zod");
-const categoryType = zod_1.z.enum(["INCOME", "EXPENSE"]);
+const categoryType = zod_1.z
+    .string()
+    .min(1, "Tipo e obrigatorio")
+    .transform((value) => {
+    const normalized = value.trim().toLowerCase();
+    if (normalized === "receita") {
+        return "INCOME";
+    }
+    if (normalized === "despesa") {
+        return "EXPENSE";
+    }
+    if (normalized === "income" || normalized === "expense") {
+        return normalized.toUpperCase();
+    }
+    return value.trim().toUpperCase();
+})
+    .refine((value) => value === "INCOME" || value === "EXPENSE", {
+    message: "Tipo deve ser INCOME ou EXPENSE"
+});
 exports.createCategorySchema = zod_1.z.object({
     body: zod_1.z.object({
         name: zod_1.z.string().min(1, "Nome e obrigatorio"),

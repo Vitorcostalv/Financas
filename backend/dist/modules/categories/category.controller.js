@@ -6,7 +6,7 @@ const errors_1 = require("../../utils/errors");
 const response_1 = require("../../utils/response");
 class CategoryController {
     static async create(req, res) {
-        const userId = req.user?.id;
+        const userId = req.userId ?? req.user?.id;
         if (!userId) {
             throw new errors_1.AppError("Nao autorizado", 401);
         }
@@ -14,7 +14,7 @@ class CategoryController {
         return (0, response_1.sendResponse)(res, 201, "Categoria criada", category);
     }
     static async list(req, res) {
-        const userId = req.user?.id;
+        const userId = req.userId ?? req.user?.id;
         if (!userId) {
             throw new errors_1.AppError("Nao autorizado", 401);
         }
@@ -22,7 +22,7 @@ class CategoryController {
         return (0, response_1.sendResponse)(res, 200, "Categorias obtidas", categories);
     }
     static async update(req, res) {
-        const userId = req.user?.id;
+        const userId = req.userId ?? req.user?.id;
         if (!userId) {
             throw new errors_1.AppError("Nao autorizado", 401);
         }
@@ -30,7 +30,7 @@ class CategoryController {
         return (0, response_1.sendResponse)(res, 200, "Categoria atualizada", category);
     }
     static async delete(req, res) {
-        const userId = req.user?.id;
+        const userId = req.userId ?? req.user?.id;
         if (!userId) {
             throw new errors_1.AppError("Nao autorizado", 401);
         }

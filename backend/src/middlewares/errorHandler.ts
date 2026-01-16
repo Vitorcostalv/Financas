@@ -1,4 +1,5 @@
 import { NextFunction, Request, Response } from "express";
+import { Prisma } from "@prisma/client";
 import { ZodError } from "zod";
 import { AppError } from "../utils/errors";
 
@@ -21,6 +22,40 @@ export function errorHandler(
       success: false,
       message: err.message,
       errors: err.details ?? null
+    });
+  }
+
+  if (err instanceof Prisma.PrismaClientValidationError) {
+    return res.status(400).json({
+      success: false,
+      message: "Dados invalidos.",
+      errors: null
+    });
+  }
+
+  if (err instanceof Prisma.PrismaClientKnownRequestError) {
+    if (err.code === "P2002") {
+      return res.status(409).json({
+        success: false,
+        message: "Ja existe uma categoria com esse nome.",
+        errors: err.meta ?? null
+      });
+    }
+
+    if (["P2000", "P2009", "P2011", "P2012"].includes(err.code)) {
+      return res.status(400).json({
+        success: false,
+        message: "Dados invalidos.",
+        errors: err.meta ?? null
+      });
+    }
+
+    console.error("Erro Prisma:", { code: err.code, message: err.message });
+
+    return res.status(500).json({
+      success: false,
+      message: "Erro interno.",
+      errors: null
     });
   }
 

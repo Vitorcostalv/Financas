@@ -35,6 +35,7 @@ export function authMiddleware(
     }
 
     req.user = { id: userId };
+    req.userId = userId;
     next();
   } catch (error) {
     next(error);

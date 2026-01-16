@@ -23,6 +23,7 @@ function authMiddleware(req, _res, next) {
             throw new errors_1.AppError("Token invalido", 401);
         }
         req.user = { id: userId };
+        req.userId = userId;
         next();
     }
     catch (error) {

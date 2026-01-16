@@ -1,0 +1,11 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.projecaoRoutes = void 0;
+const express_1 = require("express");
+const asyncHandler_1 = require("../../utils/asyncHandler");
+const validate_1 = require("../../middlewares/validate");
+const projecao_controller_1 = require("./projecao.controller");
+const projecao_schema_1 = require("./projecao.schema");
+const projecaoRoutes = (0, express_1.Router)();
+exports.projecaoRoutes = projecaoRoutes;
+projecaoRoutes.get("/mensal", (0, validate_1.validate)(projecao_schema_1.monthlyProjectionSchema), (0, asyncHandler_1.asyncHandler)(projecao_controller_1.ProjecaoController.mensal));

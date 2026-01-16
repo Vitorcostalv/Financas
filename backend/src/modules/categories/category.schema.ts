@@ -1,6 +1,28 @@
 import { z } from "zod";
 
-const categoryType = z.enum(["INCOME", "EXPENSE"]);
+const categoryType = z
+  .string()
+  .min(1, "Tipo e obrigatorio")
+  .transform((value) => {
+    const normalized = value.trim().toLowerCase();
+
+    if (normalized === "receita") {
+      return "INCOME";
+    }
+
+    if (normalized === "despesa") {
+      return "EXPENSE";
+    }
+
+    if (normalized === "income" || normalized === "expense") {
+      return normalized.toUpperCase();
+    }
+
+    return value.trim().toUpperCase();
+  })
+  .refine((value) => value === "INCOME" || value === "EXPENSE", {
+    message: "Tipo deve ser INCOME ou EXPENSE"
+  });
 
 export const createCategorySchema = z.object({
   body: z.object({
