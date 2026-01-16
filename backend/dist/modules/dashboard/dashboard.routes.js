@@ -7,5 +7,8 @@ const asyncHandler_1 = require("../../utils/asyncHandler");
 const dashboardRoutes = (0, express_1.Router)();
 exports.dashboardRoutes = dashboardRoutes;
 dashboardRoutes.get("/summary", (0, asyncHandler_1.asyncHandler)(dashboard_controller_1.DashboardController.summary));
+dashboardRoutes.get("/resumo", (0, asyncHandler_1.asyncHandler)(dashboard_controller_1.DashboardController.summary));
 dashboardRoutes.get("/expenses-by-category", (0, asyncHandler_1.asyncHandler)(dashboard_controller_1.DashboardController.expensesByCategory));
+dashboardRoutes.get("/despesas-por-categoria", (0, asyncHandler_1.asyncHandler)(dashboard_controller_1.DashboardController.expensesByCategory));
 dashboardRoutes.get("/daily-flow", (0, asyncHandler_1.asyncHandler)(dashboard_controller_1.DashboardController.dailyFlow));
+dashboardRoutes.get("/fluxo-diario", (0, asyncHandler_1.asyncHandler)(dashboard_controller_1.DashboardController.dailyFlow));

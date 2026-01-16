@@ -38,10 +38,10 @@ zod_1.z.setErrorMap((issue, ctx) => {
 });
 const app = (0, express_1.default)();
 exports.app = app;
-app.use((0, cors_1.default)());
 app.use(express_1.default.json());
+app.use((0, cors_1.default)());
 app.get("/health", (_req, res) => {
-    res.json({ success: true, message: "Ativo" });
+    res.json({ success: true, message: "OK" });
 });
 app.use(routes_1.routes);
 app.use(errorHandler_1.errorHandler);
