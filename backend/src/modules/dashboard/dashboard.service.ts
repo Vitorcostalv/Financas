@@ -1,14 +1,18 @@
 import { prisma } from "../../utils/prisma";
+import { normalizeAccountType } from "../../shared/utils/account";
 
 export class DashboardService {
-  static async summary(userId: string) {
+  static async summary(userId: string, month: number, year: number) {
+    const startDate = new Date(year, month - 1, 1);
+    const endDate = new Date(year, month, 1);
+
     const [income, expense, accounts] = await Promise.all([
       prisma.transaction.aggregate({
-        where: { userId, type: "INCOME" },
+        where: { userId, type: "INCOME", date: { gte: startDate, lt: endDate } },
         _sum: { amountCents: true }
       }),
       prisma.transaction.aggregate({
-        where: { userId, type: "EXPENSE" },
+        where: { userId, type: "EXPENSE", date: { gte: startDate, lt: endDate } },
         _sum: { amountCents: true }
       }),
       prisma.account.findMany({
@@ -17,14 +21,33 @@ export class DashboardService {
       })
     ]);
 
-    const totalIncomeCents = income._sum.amountCents ?? 0;
-    const totalExpenseCents = expense._sum.amountCents ?? 0;
+    let carteiraCents = 0;
+    let extraCents = 0;
+    let despesasCents = 0;
+
+    accounts.forEach((account) => {
+      const type = normalizeAccountType(account.type);
+
+      if (type === "WALLET") {
+        carteiraCents += account.balanceCents;
+      } else if (type === "EXTRA_POOL") {
+        extraCents += account.balanceCents;
+      } else if (type === "EXPENSE_POOL") {
+        despesasCents += account.balanceCents;
+      }
+    });
+
+    const receitasMesCents = income._sum.amountCents ?? 0;
+    const despesasMesCents = expense._sum.amountCents ?? 0;
 
     return {
-      totalIncomeCents,
-      totalExpenseCents,
-      balanceCents: totalIncomeCents - totalExpenseCents,
-      accounts
+      carteiraCents,
+      extraCents,
+      despesasCents,
+      disponivelCents: carteiraCents + extraCents - despesasCents,
+      receitasMesCents,
+      despesasMesCents,
+      resultadoMesCents: receitasMesCents - despesasMesCents
     };
   }
 

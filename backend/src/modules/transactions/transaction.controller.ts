@@ -6,7 +6,7 @@ import { parseBRLToCents } from "../../shared/utils/money";
 
 export class TransactionController {
   static async create(req: Request, res: Response) {
-    const userId = req.user?.id;
+    const userId = req.userId ?? req.user?.id;
 
     if (!userId) {
       throw new AppError("Nao autorizado", 401);
@@ -28,18 +28,23 @@ export class TransactionController {
   }
 
   static async list(req: Request, res: Response) {
-    const userId = req.user?.id;
+    const userId = req.userId ?? req.user?.id;
 
     if (!userId) {
       throw new AppError("Nao autorizado", 401);
     }
 
-    const transactions = await TransactionService.list(userId);
+    const { month, year } = req.query as { month?: string; year?: string };
+    const transactions = await TransactionService.list(
+      userId,
+      month ? Number(month) : undefined,
+      year ? Number(year) : undefined
+    );
     return sendResponse(res, 200, "Transacoes obtidas", transactions);
   }
 
   static async update(req: Request, res: Response) {
-    const userId = req.user?.id;
+    const userId = req.userId ?? req.user?.id;
 
     if (!userId) {
       throw new AppError("Nao autorizado", 401);
@@ -65,7 +70,7 @@ export class TransactionController {
   }
 
   static async delete(req: Request, res: Response) {
-    const userId = req.user?.id;
+    const userId = req.userId ?? req.user?.id;
 
     if (!userId) {
       throw new AppError("Nao autorizado", 401);

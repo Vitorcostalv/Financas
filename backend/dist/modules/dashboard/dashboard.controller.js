@@ -6,15 +6,26 @@ const errors_1 = require("../../utils/errors");
 const response_1 = require("../../utils/response");
 class DashboardController {
     static async summary(req, res) {
-        const userId = req.user?.id;
+        const userId = req.userId ?? req.user?.id;
         if (!userId) {
             throw new errors_1.AppError("Nao autorizado", 401);
         }
-        const summary = await dashboard_service_1.DashboardService.summary(userId);
+        const { month, year } = req.query;
+        const now = new Date();
+        const resolvedMonth = month ? Number(month) : now.getMonth() + 1;
+        const resolvedYear = year ? Number(year) : now.getFullYear();
+        if (Number.isNaN(resolvedMonth) ||
+            Number.isNaN(resolvedYear) ||
+            resolvedMonth < 1 ||
+            resolvedMonth > 12 ||
+            resolvedYear < 2000) {
+            throw new errors_1.AppError("Mes ou ano invalidos.", 400);
+        }
+        const summary = await dashboard_service_1.DashboardService.summary(userId, resolvedMonth, resolvedYear);
         return (0, response_1.sendResponse)(res, 200, "Resumo do dashboard", summary);
     }
     static async expensesByCategory(req, res) {
-        const userId = req.user?.id;
+        const userId = req.userId ?? req.user?.id;
         if (!userId) {
             throw new errors_1.AppError("Nao autorizado", 401);
         }
@@ -22,7 +33,7 @@ class DashboardController {
         return (0, response_1.sendResponse)(res, 200, "Despesas por categoria", data);
     }
     static async dailyFlow(req, res) {
-        const userId = req.user?.id;
+        const userId = req.userId ?? req.user?.id;
         if (!userId) {
             throw new errors_1.AppError("Nao autorizado", 401);
         }

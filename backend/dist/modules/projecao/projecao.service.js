@@ -3,11 +3,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ProjecaoService = void 0;
 const client_1 = require("@prisma/client");
 const prisma_1 = require("../../utils/prisma");
+const account_1 = require("../../shared/utils/account");
 class ProjecaoService {
     static async mensal(userId, startMonth, startYear, months) {
         const startDate = new Date(startYear, startMonth - 1, 1);
         const endDate = new Date(startYear, startMonth - 1 + months, 1);
-        const [transactions, accountSum] = await Promise.all([
+        const [transactions, accounts] = await Promise.all([
             prisma_1.prisma.transaction.findMany({
                 where: {
                     userId,
@@ -22,31 +23,52 @@ class ProjecaoService {
                     type: true
                 }
             }),
-            prisma_1.prisma.account.aggregate({
+            prisma_1.prisma.account.findMany({
                 where: { userId },
-                _sum: { balanceCents: true }
+                select: { type: true, balanceCents: true }
             })
         ]);
-        let plans = [];
+        let oneTimeItems = [];
+        let installments = [];
         try {
-            plans = await prisma_1.prisma.plan.findMany({
+            const oneTimeRaw = await prisma_1.prisma.planItem.findMany({
                 where: {
-                    userId,
+                    purchaseType: "ONE_TIME",
                     dueDate: {
                         gte: startDate,
                         lt: endDate
+                    },
+                    plan: {
+                        userId,
+                        status: { in: ["ACTIVE", "DRAFT"] }
                     }
                 },
-                select: {
-                    dueDate: true,
-                    amountCents: true
-                }
+                select: { dueDate: true, amountCents: true }
+            });
+            oneTimeItems = oneTimeRaw.filter((item) => item.dueDate instanceof Date);
+            installments = await prisma_1.prisma.installment.findMany({
+                where: {
+                    status: "PENDING",
+                    dueDate: {
+                        gte: startDate,
+                        lt: endDate
+                    },
+                    planItem: {
+                        purchaseType: "INSTALLMENTS",
+                        plan: {
+                            userId,
+                            status: { in: ["ACTIVE", "DRAFT"] }
+                        }
+                    }
+                },
+                select: { dueDate: true, amountCents: true }
             });
         }
         catch (error) {
             if (error instanceof client_1.Prisma.PrismaClientKnownRequestError &&
                 error.code === "P2021") {
-                plans = [];
+                oneTimeItems = [];
+                installments = [];
             }
             else {
                 throw error;
@@ -68,11 +90,30 @@ class ProjecaoService {
             transactionMap.set(key, current);
         });
         const planMap = new Map();
-        plans.forEach((plan) => {
-            const key = `${plan.dueDate.getFullYear()}-${plan.dueDate.getMonth() + 1}`;
-            planMap.set(key, (planMap.get(key) ?? 0) + plan.amountCents);
+        oneTimeItems.forEach((item) => {
+            const key = `${item.dueDate.getFullYear()}-${item.dueDate.getMonth() + 1}`;
+            planMap.set(key, (planMap.get(key) ?? 0) + item.amountCents);
         });
-        let saldoProjetadoCents = accountSum._sum.balanceCents ?? 0;
+        installments.forEach((installment) => {
+            const key = `${installment.dueDate.getFullYear()}-${installment.dueDate.getMonth() + 1}`;
+            planMap.set(key, (planMap.get(key) ?? 0) + installment.amountCents);
+        });
+        let carteiraCents = 0;
+        let extraCents = 0;
+        let despesasCents = 0;
+        accounts.forEach((account) => {
+            const type = (0, account_1.normalizeAccountType)(account.type);
+            if (type === "WALLET") {
+                carteiraCents += account.balanceCents;
+            }
+            else if (type === "EXTRA_POOL") {
+                extraCents += account.balanceCents;
+            }
+            else if (type === "EXPENSE_POOL") {
+                despesasCents += account.balanceCents;
+            }
+        });
+        let saldoProjetadoCents = carteiraCents + extraCents - despesasCents;
         const items = [];
         for (let index = 0; index < months; index += 1) {
             const currentDate = new Date(startYear, startMonth - 1 + index, 1);

@@ -28,6 +28,8 @@ model Account {
   name         String
   type         String
   balanceCents Int           @default(0) @map("balance")
+  creditLimitCents Int?
+  creditUsedCents  Int       @default(0)
   userId       String
   user         User          @relation(fields: [userId], references: [id])
   transactions Transaction[]
@@ -41,7 +43,6 @@ model Category {
   userId       String
   user         User          @relation(fields: [userId], references: [id])
   transactions Transaction[]
-  plans        Plan[]
 }
 
 model Transaction {
@@ -70,12 +71,39 @@ model Goal {
 
 model Plan {
   id          String   @id @default(cuid())
-  name        String
-  amountCents Int
-  dueDate     DateTime
-  categoryId  String?
+  title       String
+  description String
+  minBudgetCents Int?
+  maxBudgetCents Int?
+  status      String
   userId      String
   createdAt   DateTime @default(now())
-  category    Category? @relation(fields: [categoryId], references: [id])
   user        User     @relation(fields: [userId], references: [id])
+  items       PlanItem[]
+}
+
+model PlanItem {
+  id                   String   @id @default(cuid())
+  planId               String
+  name                 String
+  description          String
+  amountCents          Int
+  purchaseType         String
+  dueDate              DateTime?
+  installmentsCount    Int?
+  firstInstallmentDate DateTime?
+  entryAmountCents     Int?
+  createdAt            DateTime @default(now())
+  plan                 Plan     @relation(fields: [planId], references: [id])
+  installments         Installment[]
+}
+
+model Installment {
+  id               String   @id @default(cuid())
+  planItemId       String
+  installmentNumber Int
+  dueDate          DateTime
+  amountCents      Int
+  status           String
+  planItem         PlanItem @relation(fields: [planItemId], references: [id])
 }

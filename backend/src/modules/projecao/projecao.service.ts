@@ -1,5 +1,6 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "../../utils/prisma";
+import { normalizeAccountType } from "../../shared/utils/account";
 
 type ProjectionItem = {
   month: number;
@@ -21,7 +22,7 @@ export class ProjecaoService {
     const startDate = new Date(startYear, startMonth - 1, 1);
     const endDate = new Date(startYear, startMonth - 1 + months, 1);
 
-    const [transactions, accountSum] = await Promise.all([
+    const [transactions, accounts] = await Promise.all([
       prisma.transaction.findMany({
         where: {
           userId,
@@ -36,34 +37,60 @@ export class ProjecaoService {
           type: true
         }
       }),
-      prisma.account.aggregate({
+      prisma.account.findMany({
         where: { userId },
-        _sum: { balanceCents: true }
+        select: { type: true, balanceCents: true }
       })
     ]);
 
-    let plans: { dueDate: Date; amountCents: number }[] = [];
+    let oneTimeItems: { dueDate: Date; amountCents: number }[] = [];
+    let installments: { dueDate: Date; amountCents: number }[] = [];
 
     try {
-      plans = await prisma.plan.findMany({
+      const oneTimeRaw = await prisma.planItem.findMany({
         where: {
-          userId,
+          purchaseType: "ONE_TIME",
           dueDate: {
             gte: startDate,
             lt: endDate
+          },
+          plan: {
+            userId,
+            status: { in: ["ACTIVE", "DRAFT"] }
           }
         },
-        select: {
-          dueDate: true,
-          amountCents: true
-        }
+        select: { dueDate: true, amountCents: true }
+      });
+
+      oneTimeItems = oneTimeRaw.filter(
+        (item): item is { dueDate: Date; amountCents: number } =>
+          item.dueDate instanceof Date
+      );
+
+      installments = await prisma.installment.findMany({
+        where: {
+          status: "PENDING",
+          dueDate: {
+            gte: startDate,
+            lt: endDate
+          },
+          planItem: {
+            purchaseType: "INSTALLMENTS",
+            plan: {
+              userId,
+              status: { in: ["ACTIVE", "DRAFT"] }
+            }
+          }
+        },
+        select: { dueDate: true, amountCents: true }
       });
     } catch (error) {
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&
         error.code === "P2021"
       ) {
-        plans = [];
+        oneTimeItems = [];
+        installments = [];
       } else {
         throw error;
       }
@@ -94,12 +121,35 @@ export class ProjecaoService {
 
     const planMap = new Map<string, number>();
 
-    plans.forEach((plan) => {
-      const key = `${plan.dueDate.getFullYear()}-${plan.dueDate.getMonth() + 1}`;
-      planMap.set(key, (planMap.get(key) ?? 0) + plan.amountCents);
+    oneTimeItems.forEach((item) => {
+      const key = `${item.dueDate.getFullYear()}-${item.dueDate.getMonth() + 1}`;
+      planMap.set(key, (planMap.get(key) ?? 0) + item.amountCents);
     });
 
-    let saldoProjetadoCents = accountSum._sum.balanceCents ?? 0;
+    installments.forEach((installment) => {
+      const key = `${installment.dueDate.getFullYear()}-${
+        installment.dueDate.getMonth() + 1
+      }`;
+      planMap.set(key, (planMap.get(key) ?? 0) + installment.amountCents);
+    });
+
+    let carteiraCents = 0;
+    let extraCents = 0;
+    let despesasCents = 0;
+
+    accounts.forEach((account) => {
+      const type = normalizeAccountType(account.type);
+
+      if (type === "WALLET") {
+        carteiraCents += account.balanceCents;
+      } else if (type === "EXTRA_POOL") {
+        extraCents += account.balanceCents;
+      } else if (type === "EXPENSE_POOL") {
+        despesasCents += account.balanceCents;
+      }
+    });
+
+    let saldoProjetadoCents = carteiraCents + extraCents - despesasCents;
     const items: ProjectionItem[] = [];
 
     for (let index = 0; index < months; index += 1) {

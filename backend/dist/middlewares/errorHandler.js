@@ -13,17 +13,18 @@ function errorHandler(err, _req, res, _next) {
         });
     }
     if (err instanceof errors_1.AppError) {
+        const errors = err.details ?? (err.statusCode === 400 ? [] : null);
         return res.status(err.statusCode).json({
             success: false,
             message: err.message,
-            errors: err.details ?? null
+            errors
         });
     }
     if (err instanceof client_1.Prisma.PrismaClientValidationError) {
         return res.status(400).json({
             success: false,
             message: "Dados invalidos.",
-            errors: null
+            errors: []
         });
     }
     if (err instanceof client_1.Prisma.PrismaClientKnownRequestError) {
@@ -38,7 +39,7 @@ function errorHandler(err, _req, res, _next) {
             return res.status(400).json({
                 success: false,
                 message: "Dados invalidos.",
-                errors: err.meta ?? null
+                errors: err.meta ?? []
             });
         }
         console.error("Erro Prisma:", { code: err.code, message: err.message });

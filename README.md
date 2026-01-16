@@ -24,4 +24,42 @@ curl -X POST http://localhost:3333/categorias \
 # Projecao mensal
 curl "http://localhost:3333/projecao/mensal?startMonth=1&startYear=2026&months=6" \
   -H "Authorization: Bearer SEU_TOKEN"
+
+# Criar conta (WALLET, EXTRA_POOL, EXPENSE_POOL, CREDIT_CARD)
+curl -X POST http://localhost:3333/contas \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer SEU_TOKEN" \
+  -d '{"name":"Carteira","type":"WALLET","balanceCents":150000}'
+
+# Criar cartao de credito
+curl -X POST http://localhost:3333/contas \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer SEU_TOKEN" \
+  -d '{"name":"Cartao","type":"CREDIT_CARD","creditLimitCents":500000}'
+
+# Criar transacao
+curl -X POST http://localhost:3333/transacoes \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer SEU_TOKEN" \
+  -d '{"description":"Mercado","amountCents":12000,"date":"2026-01-10","type":"EXPENSE","categoryId":"ID_CAT","accountId":"ID_CONTA"}'
+
+# Criar plano (planejamento)
+curl -X POST http://localhost:3333/planos \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer SEU_TOKEN" \
+  -d '{
+    "title":"Viagem",
+    "description":"Planejamento de viagem",
+    "minBudgetCents":200000,
+    "maxBudgetCents":400000,
+    "items":[
+      {
+        "name":"Passagem",
+        "description":"Compra da passagem",
+        "amountCents":120000,
+        "purchaseType":"ONE_TIME",
+        "dueDate":"2026-02-10"
+      }
+    ]
+  }'
 ```

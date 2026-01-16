@@ -2,15 +2,18 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DashboardService = void 0;
 const prisma_1 = require("../../utils/prisma");
+const account_1 = require("../../shared/utils/account");
 class DashboardService {
-    static async summary(userId) {
+    static async summary(userId, month, year) {
+        const startDate = new Date(year, month - 1, 1);
+        const endDate = new Date(year, month, 1);
         const [income, expense, accounts] = await Promise.all([
             prisma_1.prisma.transaction.aggregate({
-                where: { userId, type: "INCOME" },
+                where: { userId, type: "INCOME", date: { gte: startDate, lt: endDate } },
                 _sum: { amountCents: true }
             }),
             prisma_1.prisma.transaction.aggregate({
-                where: { userId, type: "EXPENSE" },
+                where: { userId, type: "EXPENSE", date: { gte: startDate, lt: endDate } },
                 _sum: { amountCents: true }
             }),
             prisma_1.prisma.account.findMany({
@@ -18,13 +21,31 @@ class DashboardService {
                 orderBy: { name: "asc" }
             })
         ]);
-        const totalIncomeCents = income._sum.amountCents ?? 0;
-        const totalExpenseCents = expense._sum.amountCents ?? 0;
+        let carteiraCents = 0;
+        let extraCents = 0;
+        let despesasCents = 0;
+        accounts.forEach((account) => {
+            const type = (0, account_1.normalizeAccountType)(account.type);
+            if (type === "WALLET") {
+                carteiraCents += account.balanceCents;
+            }
+            else if (type === "EXTRA_POOL") {
+                extraCents += account.balanceCents;
+            }
+            else if (type === "EXPENSE_POOL") {
+                despesasCents += account.balanceCents;
+            }
+        });
+        const receitasMesCents = income._sum.amountCents ?? 0;
+        const despesasMesCents = expense._sum.amountCents ?? 0;
         return {
-            totalIncomeCents,
-            totalExpenseCents,
-            balanceCents: totalIncomeCents - totalExpenseCents,
-            accounts
+            carteiraCents,
+            extraCents,
+            despesasCents,
+            disponivelCents: carteiraCents + extraCents - despesasCents,
+            receitasMesCents,
+            despesasMesCents,
+            resultadoMesCents: receitasMesCents - despesasMesCents
         };
     }
     static async expensesByCategory(userId) {

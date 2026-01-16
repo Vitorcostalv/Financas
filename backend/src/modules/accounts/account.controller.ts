@@ -6,29 +6,37 @@ import { parseBRLToCents } from "../../shared/utils/money";
 
 export class AccountController {
   static async create(req: Request, res: Response) {
-    const userId = req.user?.id;
+    const userId = req.userId ?? req.user?.id;
 
     if (!userId) {
       throw new AppError("Nao autorizado", 401);
     }
 
-    const { balanceCents, balance, ...payload } = req.body;
+    const { balanceCents, balance, creditLimitCents, creditLimit, ...payload } =
+      req.body;
     const resolvedBalanceCents =
       typeof balanceCents === "number"
         ? balanceCents
         : balance !== undefined
         ? parseBRLToCents(String(balance))
         : 0;
+    const resolvedCreditLimitCents =
+      typeof creditLimitCents === "number"
+        ? creditLimitCents
+        : creditLimit !== undefined
+        ? parseBRLToCents(String(creditLimit))
+        : undefined;
 
     const account = await AccountService.create(userId, {
       ...payload,
-      balanceCents: resolvedBalanceCents
+      balanceCents: resolvedBalanceCents,
+      creditLimitCents: resolvedCreditLimitCents
     });
     return sendResponse(res, 201, "Conta criada", account);
   }
 
   static async list(req: Request, res: Response) {
-    const userId = req.user?.id;
+    const userId = req.userId ?? req.user?.id;
 
     if (!userId) {
       throw new AppError("Nao autorizado", 401);

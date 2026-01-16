@@ -10,5 +10,6 @@ const planRoutes = (0, express_1.Router)();
 exports.planRoutes = planRoutes;
 planRoutes.post("/", (0, validate_1.validate)(plan_schema_1.createPlanSchema), (0, asyncHandler_1.asyncHandler)(plan_controller_1.PlanController.create));
 planRoutes.get("/", (0, asyncHandler_1.asyncHandler)(plan_controller_1.PlanController.list));
+planRoutes.get("/:id", (0, asyncHandler_1.asyncHandler)(plan_controller_1.PlanController.getById));
 planRoutes.put("/:id", (0, validate_1.validate)(plan_schema_1.updatePlanSchema), (0, asyncHandler_1.asyncHandler)(plan_controller_1.PlanController.update));
 planRoutes.delete("/:id", (0, validate_1.validate)(plan_schema_1.deletePlanSchema), (0, asyncHandler_1.asyncHandler)(plan_controller_1.PlanController.delete));

@@ -18,6 +18,8 @@ planRoutes.post(
 
 planRoutes.get("/", asyncHandler(PlanController.list));
 
+planRoutes.get("/:id", asyncHandler(PlanController.getById));
+
 planRoutes.put(
   "/:id",
   validate(updatePlanSchema),

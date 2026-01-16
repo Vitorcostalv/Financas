@@ -1,19 +1,25 @@
 import { prisma } from "../../utils/prisma";
+import { normalizeAccountType } from "../../shared/utils/account";
 
 export class AccountService {
   static async create(
     userId: string,
     data: {
       name: string;
-      type: "BANK" | "WALLET" | "CREDIT";
+      type: string;
       balanceCents?: number;
+      creditLimitCents?: number;
     }
   ) {
+    const accountType = normalizeAccountType(data.type);
+
     return prisma.account.create({
       data: {
         name: data.name,
-        type: data.type,
-        balanceCents: data.balanceCents ?? 0,
+        type: accountType,
+        balanceCents: accountType === "CREDIT_CARD" ? 0 : data.balanceCents ?? 0,
+        creditLimitCents: accountType === "CREDIT_CARD" ? data.creditLimitCents : null,
+        creditUsedCents: accountType === "CREDIT_CARD" ? 0 : 0,
         userId
       }
     });

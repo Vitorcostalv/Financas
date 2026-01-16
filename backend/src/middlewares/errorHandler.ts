@@ -18,10 +18,13 @@ export function errorHandler(
   }
 
   if (err instanceof AppError) {
+    const errors =
+      err.details ?? (err.statusCode === 400 ? [] : null);
+
     return res.status(err.statusCode).json({
       success: false,
       message: err.message,
-      errors: err.details ?? null
+      errors
     });
   }
 
@@ -29,7 +32,7 @@ export function errorHandler(
     return res.status(400).json({
       success: false,
       message: "Dados invalidos.",
-      errors: null
+      errors: []
     });
   }
 
@@ -46,7 +49,7 @@ export function errorHandler(
       return res.status(400).json({
         success: false,
         message: "Dados invalidos.",
-        errors: err.meta ?? null
+        errors: err.meta ?? []
       });
     }
 
