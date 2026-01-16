@@ -1,24 +1,24 @@
 import { Request, Response } from "express";
+import { ZodError } from "zod";
 import { DashboardService } from "./dashboard.service";
 import { AppError } from "../../utils/errors";
 import { sendResponse } from "../../utils/response";
+import { dashboardResumoSchema, dashboardSerieSchema } from "./dashboard.schema";
 
-function resolveMonthYear(query: { month?: string; year?: string }) {
-  const now = new Date();
-  const resolvedMonth = query.month ? Number(query.month) : now.getMonth() + 1;
-  const resolvedYear = query.year ? Number(query.year) : now.getFullYear();
+function parseMonthYear(
+  query: unknown
+): { data: { month: number; year: number } } | { error: ZodError } {
+  const parsed = dashboardResumoSchema.safeParse({ query });
 
-  if (
-    Number.isNaN(resolvedMonth) ||
-    Number.isNaN(resolvedYear) ||
-    resolvedMonth < 1 ||
-    resolvedMonth > 12 ||
-    resolvedYear < 2000
-  ) {
-    throw new AppError("Mes ou ano invalidos.", 400);
+  if (!parsed.success) {
+    return { error: parsed.error };
   }
 
-  return { resolvedMonth, resolvedYear };
+  const now = new Date();
+  const month = parsed.data.query.month ?? now.getMonth() + 1;
+  const year = parsed.data.query.year ?? now.getFullYear();
+
+  return { data: { month, year } };
 }
 
 export class DashboardController {
@@ -29,9 +29,17 @@ export class DashboardController {
       throw new AppError("Nao autorizado", 401);
     }
 
-    const { resolvedMonth, resolvedYear } = resolveMonthYear(
-      req.query as { month?: string; year?: string }
-    );
+    const parsed = parseMonthYear(req.query);
+
+    if ("error" in parsed) {
+      return res.status(400).json({
+        success: false,
+        message: "Parametros invalidos.",
+        errors: parsed.error.flatten()
+      });
+    }
+
+    const { month: resolvedMonth, year: resolvedYear } = parsed.data;
 
     try {
       const summary = await DashboardService.summary(
@@ -45,8 +53,18 @@ export class DashboardController {
         throw error;
       }
 
-      console.error("Erro ao carregar resumo do dashboard:", error);
-      throw new AppError("Erro ao carregar resumo.", 500);
+      console.error("[Dashboard] erro", {
+        userId,
+        query: req.query,
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined
+      });
+
+      return res.status(500).json({
+        success: false,
+        message: "Erro interno ao carregar o dashboard.",
+        errors: null
+      });
     }
   }
 
@@ -57,9 +75,17 @@ export class DashboardController {
       throw new AppError("Nao autorizado", 401);
     }
 
-    const { resolvedMonth, resolvedYear } = resolveMonthYear(
-      req.query as { month?: string; year?: string }
-    );
+    const parsed = parseMonthYear(req.query);
+
+    if ("error" in parsed) {
+      return res.status(400).json({
+        success: false,
+        message: "Parametros invalidos.",
+        errors: parsed.error.flatten()
+      });
+    }
+
+    const { month: resolvedMonth, year: resolvedYear } = parsed.data;
 
     const data = await DashboardService.expensesByCategory(
       userId,
@@ -76,9 +102,17 @@ export class DashboardController {
       throw new AppError("Nao autorizado", 401);
     }
 
-    const { resolvedMonth, resolvedYear } = resolveMonthYear(
-      req.query as { month?: string; year?: string }
-    );
+    const parsed = parseMonthYear(req.query);
+
+    if ("error" in parsed) {
+      return res.status(400).json({
+        success: false,
+        message: "Parametros invalidos.",
+        errors: parsed.error.flatten()
+      });
+    }
+
+    const { month: resolvedMonth, year: resolvedYear } = parsed.data;
 
     const data = await DashboardService.dailyFlow(
       userId,
@@ -95,11 +129,17 @@ export class DashboardController {
       throw new AppError("Nao autorizado", 401);
     }
 
-    const { startMonth, startYear, months } = req.query as unknown as {
-      startMonth: number;
-      startYear: number;
-      months: number;
-    };
+    const parsed = dashboardSerieSchema.safeParse({ query: req.query });
+
+    if (!parsed.success) {
+      return res.status(400).json({
+        success: false,
+        message: "Parametros invalidos.",
+        errors: parsed.error.flatten()
+      });
+    }
+
+    const { startMonth, startYear, months } = parsed.data.query;
 
     try {
       const data = await DashboardService.serieMensal(
@@ -109,14 +149,24 @@ export class DashboardController {
         months
       );
 
-      return sendResponse(res, 200, "Serie mensal carregada com sucesso.", data);
+      return sendResponse(res, 200, "Serie carregada com sucesso.", data);
     } catch (error) {
       if (error instanceof AppError) {
         throw error;
       }
 
-      console.error("Erro ao carregar serie mensal:", error);
-      throw new AppError("Erro ao carregar serie mensal.", 500);
+      console.error("[Dashboard] erro", {
+        userId,
+        query: req.query,
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined
+      });
+
+      return res.status(500).json({
+        success: false,
+        message: "Erro interno ao carregar o dashboard.",
+        errors: null
+      });
     }
   }
 }

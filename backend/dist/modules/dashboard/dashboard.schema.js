@@ -1,7 +1,25 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.dashboardSerieSchema = void 0;
+exports.dashboardSerieSchema = exports.dashboardResumoSchema = void 0;
 const zod_1 = require("zod");
+exports.dashboardResumoSchema = zod_1.z.object({
+    query: zod_1.z.object({
+        month: zod_1.z
+            .coerce
+            .number()
+            .int("Mes deve ser inteiro")
+            .min(1, "Mes invalido")
+            .max(12, "Mes invalido")
+            .optional(),
+        year: zod_1.z
+            .coerce
+            .number()
+            .int("Ano deve ser inteiro")
+            .min(2000, "Ano invalido")
+            .max(2100, "Ano invalido")
+            .optional()
+    })
+});
 exports.dashboardSerieSchema = zod_1.z.object({
     query: zod_1.z.object({
         startMonth: zod_1.z
@@ -14,7 +32,8 @@ exports.dashboardSerieSchema = zod_1.z.object({
             .coerce
             .number()
             .int("Ano deve ser inteiro")
-            .min(2000, "Ano invalido"),
+            .min(2000, "Ano invalido")
+            .max(2100, "Ano invalido"),
         months: zod_1.z
             .coerce
             .number()

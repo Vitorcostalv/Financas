@@ -4,18 +4,20 @@ exports.DashboardService = void 0;
 const prisma_1 = require("../../utils/prisma");
 const account_1 = require("../../shared/utils/account");
 const accountSchedule_service_1 = require("../accounts/accountSchedule.service");
+const date_1 = require("../../shared/utils/date");
 class DashboardService {
     static async summary(userId, month, year) {
-        const startDate = new Date(year, month - 1, 1);
-        const endDate = new Date(year, month, 1);
-        const [income, expense, accounts, ocorrencias] = await Promise.all([
-            prisma_1.prisma.transaction.aggregate({
-                where: { userId, type: "INCOME", date: { gte: startDate, lt: endDate } },
-                _sum: { amountCents: true }
-            }),
-            prisma_1.prisma.transaction.aggregate({
-                where: { userId, type: "EXPENSE", date: { gte: startDate, lt: endDate } },
-                _sum: { amountCents: true }
+        const { start, end } = (0, date_1.getMonthRange)(year, month);
+        const [transactions, accounts, ocorrencias] = await Promise.all([
+            prisma_1.prisma.transaction.findMany({
+                where: {
+                    userId,
+                    date: { gte: start, lt: end }
+                },
+                select: {
+                    amountCents: true,
+                    type: true
+                }
             }),
             prisma_1.prisma.account.findMany({
                 where: { userId },
@@ -23,23 +25,21 @@ class DashboardService {
             }),
             accountSchedule_service_1.AccountScheduleService.getOccurrencesForMonth(userId, month, year)
         ]);
-        let carteiraCents = 0;
-        let extraCents = 0;
-        let despesasCents = 0;
-        accounts.forEach((account) => {
-            const type = (0, account_1.normalizeAccountType)(account.type);
-            if (type === "WALLET") {
-                carteiraCents += account.balanceCents;
-            }
-            else if (type === "EXTRA_POOL") {
-                extraCents += account.balanceCents;
-            }
-            else if (type === "EXPENSE_POOL") {
-                despesasCents += account.balanceCents;
-            }
-        });
-        const receitasMesCents = income._sum.amountCents ?? 0;
-        const despesasMesCents = expense._sum.amountCents ?? 0;
+        const carteiraCents = accounts
+            .filter((account) => (0, account_1.normalizeAccountType)(account.type) === "WALLET")
+            .reduce((total, account) => total + (account.balanceCents ?? 0), 0);
+        const extraCents = accounts
+            .filter((account) => (0, account_1.normalizeAccountType)(account.type) === "EXTRA_POOL")
+            .reduce((total, account) => total + (account.balanceCents ?? 0), 0);
+        const despesasCents = accounts
+            .filter((account) => (0, account_1.normalizeAccountType)(account.type) === "EXPENSE_POOL")
+            .reduce((total, account) => total + (account.balanceCents ?? 0), 0);
+        const receitasMesCents = transactions
+            .filter((item) => item.type === "INCOME")
+            .reduce((total, item) => total + (item.amountCents ?? 0), 0);
+        const despesasMesCents = transactions
+            .filter((item) => item.type === "EXPENSE")
+            .reduce((total, item) => total + (item.amountCents ?? 0), 0);
         const receitasPrevistasCents = ocorrencias
             .filter((item) => item.type === "INCOME")
             .reduce((total, item) => total + item.amountCents, 0);
@@ -63,69 +63,48 @@ class DashboardService {
         };
     }
     static async serieMensal(userId, startMonth, startYear, months) {
-        const startDate = new Date(startYear, startMonth - 1, 1);
-        const endDate = new Date(startYear, startMonth - 1 + months, 1);
-        const [transactions, accounts, regras] = await Promise.all([
-            prisma_1.prisma.transaction.findMany({
-                where: {
-                    userId,
-                    date: {
-                        gte: startDate,
-                        lt: endDate
-                    }
-                },
-                select: {
-                    date: true,
-                    amountCents: true,
-                    type: true
-                }
-            }),
+        const { start } = (0, date_1.getMonthRange)(startYear, startMonth);
+        const endRange = new Date(startYear, startMonth - 1 + months, 1);
+        const [accounts, schedules] = await Promise.all([
             prisma_1.prisma.account.findMany({
                 where: { userId },
                 select: { type: true, balanceCents: true }
             }),
-            accountSchedule_service_1.AccountScheduleService.listSchedulesForRange(userId, startDate, endDate)
+            accountSchedule_service_1.AccountScheduleService.listSchedulesForRange(userId, start, endRange)
         ]);
-        let carteiraCents = 0;
-        let extraCents = 0;
-        let despesasCents = 0;
-        accounts.forEach((account) => {
-            const type = (0, account_1.normalizeAccountType)(account.type);
-            if (type === "WALLET") {
-                carteiraCents += account.balanceCents;
-            }
-            else if (type === "EXTRA_POOL") {
-                extraCents += account.balanceCents;
-            }
-            else if (type === "EXPENSE_POOL") {
-                despesasCents += account.balanceCents;
-            }
-        });
+        const carteiraCents = accounts
+            .filter((account) => (0, account_1.normalizeAccountType)(account.type) === "WALLET")
+            .reduce((total, account) => total + (account.balanceCents ?? 0), 0);
+        const extraCents = accounts
+            .filter((account) => (0, account_1.normalizeAccountType)(account.type) === "EXTRA_POOL")
+            .reduce((total, account) => total + (account.balanceCents ?? 0), 0);
+        const despesasCents = accounts
+            .filter((account) => (0, account_1.normalizeAccountType)(account.type) === "EXPENSE_POOL")
+            .reduce((total, account) => total + (account.balanceCents ?? 0), 0);
         const disponivelCents = carteiraCents + extraCents - despesasCents;
-        const transactionMap = new Map();
-        transactions.forEach((transaction) => {
-            const key = `${transaction.date.getFullYear()}-${transaction.date.getMonth() + 1}`;
-            const current = transactionMap.get(key) ?? {
-                incomeCents: 0,
-                expenseCents: 0
-            };
-            if (transaction.type === "INCOME") {
-                current.incomeCents += transaction.amountCents;
-            }
-            else {
-                current.expenseCents += transaction.amountCents;
-            }
-            transactionMap.set(key, current);
-        });
         const items = [];
         for (let index = 0; index < months; index += 1) {
             const currentDate = new Date(startYear, startMonth - 1 + index, 1);
             const month = currentDate.getMonth() + 1;
             const year = currentDate.getFullYear();
-            const key = `${year}-${month}`;
-            const receitasCents = transactionMap.get(key)?.incomeCents ?? 0;
-            const despesasCents = transactionMap.get(key)?.expenseCents ?? 0;
-            const ocorrencias = accountSchedule_service_1.AccountScheduleService.buildOccurrencesForMonth(regras, month, year);
+            const range = (0, date_1.getMonthRange)(year, month);
+            const transactions = await prisma_1.prisma.transaction.findMany({
+                where: {
+                    userId,
+                    date: { gte: range.start, lt: range.end }
+                },
+                select: {
+                    amountCents: true,
+                    type: true
+                }
+            });
+            const receitasCents = transactions
+                .filter((item) => item.type === "INCOME")
+                .reduce((total, item) => total + (item.amountCents ?? 0), 0);
+            const despesasCents = transactions
+                .filter((item) => item.type === "EXPENSE")
+                .reduce((total, item) => total + (item.amountCents ?? 0), 0);
+            const ocorrencias = accountSchedule_service_1.AccountScheduleService.buildOccurrencesForMonth(schedules, month, year);
             const receitasPrevistasCents = ocorrencias
                 .filter((item) => item.type === "INCOME")
                 .reduce((total, item) => total + item.amountCents, 0);
@@ -137,6 +116,7 @@ class DashboardService {
                 year,
                 receitasCents,
                 despesasCents,
+                resultadoCents: receitasCents - despesasCents,
                 disponivelCents,
                 receitasPrevistasCents,
                 despesasPrevistasCents
