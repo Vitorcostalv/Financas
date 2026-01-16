@@ -12,13 +12,19 @@ const routes = Router();
 
 routes.use("/auth", authRoutes);
 
-routes.use(authMiddleware);
+routes.use("/accounts", authMiddleware, accountRoutes);
+routes.use("/contas", authMiddleware, accountRoutes);
 
-routes.use("/accounts", accountRoutes);
-routes.use("/categories", categoryRoutes);
-routes.use("/transactions", transactionRoutes);
-routes.use("/dashboard", dashboardRoutes);
-routes.use("/goals", goalRoutes);
-routes.use("/plans", planRoutes);
+routes.use("/categories", authMiddleware, categoryRoutes);
+routes.use("/categorias", authMiddleware, categoryRoutes);
+
+routes.use("/transactions", authMiddleware, transactionRoutes);
+routes.use("/transacoes", authMiddleware, transactionRoutes);
+
+routes.use("/plans", authMiddleware, planRoutes);
+routes.use("/planos", authMiddleware, planRoutes);
+
+routes.use("/dashboard", authMiddleware, dashboardRoutes);
+routes.use("/goals", authMiddleware, goalRoutes);
 
 export { routes };

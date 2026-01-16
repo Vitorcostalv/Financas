@@ -6,4 +6,7 @@ app.listen(env.PORT, () => {
   const dbPath = dbUrl.startsWith("file:") ? dbUrl.slice(5) : dbUrl;
   console.log(`Banco: ${dbPath}`);
   console.log(`Finance API running on port ${env.PORT}`);
+  console.log(
+    "Rotas registradas: /auth, /contas, /categorias, /transacoes, /planos, /dashboard"
+  );
 });

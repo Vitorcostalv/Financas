@@ -40,11 +40,11 @@ z.setErrorMap((issue, ctx) => {
 
 const app = express();
 
-app.use(cors());
 app.use(express.json());
+app.use(cors());
 
 app.get("/health", (_req, res) => {
-  res.json({ success: true, message: "Ativo" });
+  res.json({ success: true, message: "OK" });
 });
 
 app.use(routes);
