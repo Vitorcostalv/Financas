@@ -1,0 +1,14 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.planRoutes = void 0;
+const express_1 = require("express");
+const plan_controller_1 = require("./plan.controller");
+const validate_1 = require("../../middlewares/validate");
+const plan_schema_1 = require("./plan.schema");
+const asyncHandler_1 = require("../../utils/asyncHandler");
+const planRoutes = (0, express_1.Router)();
+exports.planRoutes = planRoutes;
+planRoutes.post("/", (0, validate_1.validate)(plan_schema_1.createPlanSchema), (0, asyncHandler_1.asyncHandler)(plan_controller_1.PlanController.create));
+planRoutes.get("/", (0, asyncHandler_1.asyncHandler)(plan_controller_1.PlanController.list));
+planRoutes.put("/:id", (0, validate_1.validate)(plan_schema_1.updatePlanSchema), (0, asyncHandler_1.asyncHandler)(plan_controller_1.PlanController.update));
+planRoutes.delete("/:id", (0, validate_1.validate)(plan_schema_1.deletePlanSchema), (0, asyncHandler_1.asyncHandler)(plan_controller_1.PlanController.delete));

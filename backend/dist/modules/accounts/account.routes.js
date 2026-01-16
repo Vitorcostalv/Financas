@@ -1,0 +1,12 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.accountRoutes = void 0;
+const express_1 = require("express");
+const account_controller_1 = require("./account.controller");
+const validate_1 = require("../../middlewares/validate");
+const account_schema_1 = require("./account.schema");
+const asyncHandler_1 = require("../../utils/asyncHandler");
+const accountRoutes = (0, express_1.Router)();
+exports.accountRoutes = accountRoutes;
+accountRoutes.post("/", (0, validate_1.validate)(account_schema_1.createAccountSchema), (0, asyncHandler_1.asyncHandler)(account_controller_1.AccountController.create));
+accountRoutes.get("/", (0, asyncHandler_1.asyncHandler)(account_controller_1.AccountController.list));

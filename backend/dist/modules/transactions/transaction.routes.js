@@ -1,0 +1,14 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.transactionRoutes = void 0;
+const express_1 = require("express");
+const transaction_controller_1 = require("./transaction.controller");
+const validate_1 = require("../../middlewares/validate");
+const transaction_schema_1 = require("./transaction.schema");
+const asyncHandler_1 = require("../../utils/asyncHandler");
+const transactionRoutes = (0, express_1.Router)();
+exports.transactionRoutes = transactionRoutes;
+transactionRoutes.post("/", (0, validate_1.validate)(transaction_schema_1.createTransactionSchema), (0, asyncHandler_1.asyncHandler)(transaction_controller_1.TransactionController.create));
+transactionRoutes.get("/", (0, asyncHandler_1.asyncHandler)(transaction_controller_1.TransactionController.list));
+transactionRoutes.put("/:id", (0, validate_1.validate)(transaction_schema_1.updateTransactionSchema), (0, asyncHandler_1.asyncHandler)(transaction_controller_1.TransactionController.update));
+transactionRoutes.delete("/:id", (0, validate_1.validate)(transaction_schema_1.deleteTransactionSchema), (0, asyncHandler_1.asyncHandler)(transaction_controller_1.TransactionController.delete));

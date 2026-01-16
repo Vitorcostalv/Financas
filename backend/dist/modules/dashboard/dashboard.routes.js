@@ -1,0 +1,11 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.dashboardRoutes = void 0;
+const express_1 = require("express");
+const dashboard_controller_1 = require("./dashboard.controller");
+const asyncHandler_1 = require("../../utils/asyncHandler");
+const dashboardRoutes = (0, express_1.Router)();
+exports.dashboardRoutes = dashboardRoutes;
+dashboardRoutes.get("/summary", (0, asyncHandler_1.asyncHandler)(dashboard_controller_1.DashboardController.summary));
+dashboardRoutes.get("/expenses-by-category", (0, asyncHandler_1.asyncHandler)(dashboard_controller_1.DashboardController.expensesByCategory));
+dashboardRoutes.get("/daily-flow", (0, asyncHandler_1.asyncHandler)(dashboard_controller_1.DashboardController.dailyFlow));

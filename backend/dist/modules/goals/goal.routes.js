@@ -1,0 +1,12 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.goalRoutes = void 0;
+const express_1 = require("express");
+const goal_controller_1 = require("./goal.controller");
+const validate_1 = require("../../middlewares/validate");
+const goal_schema_1 = require("./goal.schema");
+const asyncHandler_1 = require("../../utils/asyncHandler");
+const goalRoutes = (0, express_1.Router)();
+exports.goalRoutes = goalRoutes;
+goalRoutes.post("/", (0, validate_1.validate)(goal_schema_1.createGoalSchema), (0, asyncHandler_1.asyncHandler)(goal_controller_1.GoalController.create));
+goalRoutes.get("/", (0, asyncHandler_1.asyncHandler)(goal_controller_1.GoalController.list));
