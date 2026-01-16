@@ -1,0 +1,66 @@
+// Prisma schema for Finance backend
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String        @id @default(cuid())
+  name         String
+  email        String        @unique
+  password     String
+  createdAt    DateTime      @default(now())
+  accounts     Account[]
+  categories   Category[]
+  transactions Transaction[]
+  goals        Goal[]
+}
+
+model Account {
+  id           String        @id @default(cuid())
+  name         String
+  type         String
+  balance      Float         @default(0)
+  userId       String
+  user         User          @relation(fields: [userId], references: [id])
+  transactions Transaction[]
+}
+
+model Category {
+  id           String        @id @default(cuid())
+  name         String
+  type         String
+  color        String
+  userId       String
+  user         User          @relation(fields: [userId], references: [id])
+  transactions Transaction[]
+}
+
+model Transaction {
+  id          String           @id @default(cuid())
+  description String
+  amount      Float
+  date        DateTime
+  type        String
+  categoryId  String
+  accountId   String
+  userId      String
+  category    Category         @relation(fields: [categoryId], references: [id])
+  account     Account          @relation(fields: [accountId], references: [id])
+  user        User             @relation(fields: [userId], references: [id])
+}
+
+model Goal {
+  id      String  @id @default(cuid())
+  name    String
+  limit   Float
+  current Float   @default(0)
+  month   Int
+  userId  String
+  user    User    @relation(fields: [userId], references: [id])
+}
